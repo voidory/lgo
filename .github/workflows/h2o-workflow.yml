@@ -1,7 +1,7 @@
-name: H2O functional workflow verification
+name: LGO installed-source and H2O verification
 on:
   push:
-    branches: [guided/h2o-complete-workflow]
+    branches: ['**']
   pull_request:
     branches: [main]
   workflow_dispatch:
