@@ -22,7 +22,7 @@ async def run(url,screenshots=None):
             await check('two retained previews',await page.locator('.set-construction').count()==2)
             await check('unanswered not silently completed','(+, ?)' in await page.locator('.set-construction').nth(0).inner_text())
             await check('reference retained honestly','(+, +)' in await page.locator('.set-construction').nth(1).inner_text())
-            await check('no unsupported Step 6',await page.locator('#next').count()==0)
+            await check('Step 6 continuation available without silently repairing inputs',await page.locator('#next').count()==1)
             await page.locator('#check-set').focus();await page.keyboard.press('Enter')
             await check('count leads focus to independence',await page.evaluate("document.activeElement.id==='check-independence'"))
             await page.locator('#check-independence').click()

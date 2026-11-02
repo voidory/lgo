@@ -21,5 +21,5 @@ const before=constructionPatterns(s);const reset=reduce(s,{type:'reset-check'});
 s=reduce(s,{type:'edit-sum'});s=reduce(s,{type:'reset'});eq(s.completeSet.stage,0);s=reduce(reduce(s,{type:'next'}),{type:'next'});eq(evaluateCompleteSet(s).result.status,'incomplete');
 s=reduce(s,{type:'edit-sum'});s=reduce(s,{type:'same'});s=reduce(s,{type:'next'});s=reduce(s,{type:'reset'});s=reduce(s,{type:'next'});eq(evaluateCompleteSet(s).result.status,'invalid');
 assert.throws(()=>coefficients(s),RangeError);count++;
-eq(reduce(s,{type:'next'}).step,5);eq(reduce(s,{type:'back'}).step,4);
+eq(reduce(s,{type:'next'}).step,6);eq(reduce(s,{type:'back'}).step,4);
 console.log(JSON.stringify({suite:'step5',assertionsPassed:count}));
