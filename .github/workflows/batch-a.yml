@@ -1,0 +1,41 @@
+name: Batch A hardening verification
+on:
+  push:
+    branches: [hardening/verification-candidate]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Install pinned browser test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verification-output
+          python3 -m venv "$RUNNER_TEMP/lgo-venv"
+          "$RUNNER_TEMP/lgo-venv/bin/python" -m pip install -r requirements-verification.txt 2>&1 | tee verification-output/install.log
+          "$RUNNER_TEMP/lgo-venv/bin/python" -m playwright install --with-deps chromium 2>&1 | tee verification-output/browser-install.log
+      - name: Apply locally and verify full tree
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/lgo-venv/bin/python" scripts/verify_batch_a.py --apply-recipe
+      - name: Preserve logs and applied source
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: batch-a-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: verification-output/
+          if-no-files-found: warn
+          retention-days: 14
