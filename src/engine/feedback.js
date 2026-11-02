@@ -12,7 +12,7 @@ const TABLE = {
   C1: ['course', 'course statement', 'Valid, but not the picture the course draws. It is a rotated or different member of the same symmetry type.'],
   X1: ['validity', 'theorem', 'Only central functions of the same symmetry type as the LGO can have non-zero interaction.'],
   X2: ['validity', 'theorem', 'Every symmetry-compatible central function should be listed; an LGO with none is nonbonding.'],
-  X3: ['course', 'course statement', 'This valid LGO pairs with a combination of the central orbitals, not with the single canonical one.'],
+  X3: ['model', 'model assumption', 'Noncanonical sign-only matching is not graded without coefficient-level support.'],
   X4: ['course', 'course statement', 'Symmetry permits this interaction; the course neglects it because of the energy gap.'],
   X6: ['validity', 'theorem', 'Same symmetry type, but this specific LGO has zero overlap with that central function: it is aligned with a different one.'],
   X5: ['course', 'course statement', 'Symmetry-compatible, but this central function is not part of the course model.'],
@@ -23,6 +23,8 @@ const TABLE = {
   F2: ['validity', 'theorem', 'An orbital holds at most two electrons.'],
   F3: ['course', 'course statement', 'The occupancy differs from filling the course ladder from the bottom up.'],
   F4: ['course', 'course statement', "Hund's rule: occupy a degenerate set singly before pairing."],
+  F5: ['validity', 'convention', 'Occupancies must map known orbital IDs to integers 0, 1 or 2; omitted IDs mean zero.'],
+  S4: ['validity', 'convention', 'Construction inputs must use sign arrays of -1, 0 and 1; missing entries remain unanswered.'],
   B1: ['model', 'model assumption', 'Bond order here is a counting convention for the qualitative diagram: (bonding e - antibonding e)/2, shared equally over the bonds.'],
 };
 export function fb(code, extra = {}) {

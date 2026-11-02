@@ -52,7 +52,7 @@ for (const id of ids) {
   const inter = new Set(C.interactions.map((x) => x[1]));
   for (const c of C.centralUsed) if (!inter.has(c) && !C.ligandOnly) {
     const neglected = (C.neglected || []).some((n) => n.central === c);
-    ok(cir[c] === null || neglected, `${id}/${c}: unused central function is nonbonding by symmetry or neglected by the course for a stated reason`);
+    ok(!m.irreps.some(ir=>ir.name===cir[c]) || neglected, `${id}/${c}: unused central function is nonbonding by symmetry or neglected by the course for a stated reason`);
   }
 }
 
@@ -140,7 +140,7 @@ for (const [name, d] of Object.entries(DIATOMICS)) {
   r = note(gradeMatching(s, Cs, { lgoId: 'eg_1', selected: ['dx2y2'] })); ok(r.status === 'correct' && !r.courseOk && r.messages.some((x) => x.code === 'X5'), 'SF6 Eg -> d(x2-y2): symmetry-allowed but outside the course model (X5)');
   r = note(gradeMatching(s, Cs, { lgoId: 't1u_x', selected: ['py'] })); ok(r.status === 'incorrect' && r.messages.some((x) => x.code === 'X6'), 'SF6 T1u_x -> py: same symmetry type but zero overlap (X6)');
   r = note(gradeMatching(s, Cs, { lgoId: 't1u_x', selected: ['px'] })); ok(r.status === 'correct' && r.courseOk, 'SF6 T1u_x -> px');
-  r = note(gradeMatching(s, Cs, { pattern: [1, -1, 1, -1, 0, 0], selected: ['px', 'py'] })); ok(r.status === 'correct' && r.rotated && r.messages.some((x) => x.code === 'X3'), 'SF6 rotated T1u pairs with a px+py combination (X3, valid)');
+  r = note(gradeMatching(s, Cs, { pattern: [1, -1, 1, -1, 0, 0], selected: ['px', 'py'] })); ok(r.status === 'blocked' && r.messages.some(x=>x.code==='X3'), 'Noncanonical matching is explicitly ungraded');
   const a = M['allyl'], Ca = COURSE['allyl'];
   r = note(gradeMatching(a, Ca, { lgoId: 'pp', selected: ['p2'] })); ok(r.status === 'correct' && r.courseOk, 'allyl p1+p3 -> p2');
   r = note(gradeMatching(a, Ca, { lgoId: 'pm', none: true })); ok(r.status === 'correct', 'allyl p1-p3 is nonbonding');
@@ -171,6 +171,9 @@ for (const [name, d] of Object.entries(DIATOMICS)) {
   ok(note(gradeFilling(sys, { ...occ, 'n:py': 3, 'n:s': 1 })).status === 'overfull', 'three in one orbital -> F2');
   const sw = { ...occ, 'n:py': 0, 'a:LGO1+pz': 2 }; ok(note(gradeFilling(sys, sw)).status === 'differs', 'antibonding filled instead of nonbonding -> F3');
 }
+
+note(gradeFilling(buildCourseSystem(M.h2o,COURSE.h2o),{ghost:2}));
+note(gradeConstruction(M.h2o,COURSE.h2o,[[1,2],[1,-1]]));
 
 // 9. Every feedback code is reachable
 for (const c of FEEDBACK_CODES) ok(emitted.has(c), `feedback code ${c} is reachable by a scripted answer`);
