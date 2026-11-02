@@ -4,12 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node tests/run.mjs && node tests/stage2.mjs && node tests/hardening.mjs && node tests/ui-zero.mjs && node tests/step5.mjs",
+    "test": "node tests/run.mjs && node tests/stage2.mjs && node tests/hardening.mjs && node tests/ui-zero.mjs && node tests/step5.mjs && node tests/h2o-model.mjs && node tests/h2o-ui.mjs",
     "test:hardening": "node tests/hardening.mjs",
     "test:engine": "node tests/run.mjs",
     "test:stage2": "node tests/stage2.mjs",
     "dump": "node scripts/dump.mjs",
-    "test:ui": "node tests/ui-preview.mjs && node tests/ui-zero.mjs && node tests/step5.mjs",
-    "test:step5": "node tests/step5.mjs"
+    "test:ui": "node tests/ui-preview.mjs && node tests/ui-zero.mjs && node tests/step5.mjs && node tests/h2o-model.mjs && node tests/h2o-ui.mjs",
+    "test:step5": "node tests/step5.mjs",
+    "test:h2o": "node tests/h2o-model.mjs && node tests/h2o-ui.mjs"
   }
 }

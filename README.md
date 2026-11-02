@@ -1,28 +1,32 @@
-# LGO Lab — Steps 1–5 preview
+# LGO Lab — H2O functional UI candidate
 
-A mobile-first LGO/MO learning application for NTU CM2021, under development. The root page connects five H₂O Guided steps: valence basis, ligand-fragment separation, sum and difference construction, and an explanatory complete-set check using the existing mathematical engine. Batch A supplies input validation and explicit AO-symmetry metadata; Batch B retains the learner's actual constructions. Course data are unchanged. Zero coefficients remain distinct from unanswered input.
+Mobile-first CM2021 application. The root connects Guided Steps 1–9: retained ligand construction, complete-set checking, oxygen symmetry matching, individual course-model MO outcomes, supported partial ordering, reference filling and per-bond interpretation. This is an ungraded 2D schematic candidate, not a verified release or completed spatial renderer.
 
-## Preview and test
+## Preview and verify
+
 ```sh
 python3 -m http.server 8000
 # Open http://localhost:8000/
 npm test
 npm run test:ui
-npm run test:hardening
-npm run test:step5
-# Full verification in a complete git checkout:
+npm run test:h2o
 python3 -m pip install -r requirements-verification.txt
 python3 -m playwright install --with-deps chromium
 python3 scripts/verify_batch_a.py
+# Additionally, with the preview server running:
+python3 tests/browser-h2o.py http://localhost:8000/ --screenshots verification-output/screenshots
 ```
-Serve over HTTP, not file://. No UI dependencies or build step are required. Imports and assets are relative for a Pages project subdirectory. The verifier requires Node, npm, Python, Git and the pinned browser dependency. It checks permanent package commands without rewriting them, validates 60 rendered states and runs announcement, Step 4 and Step 5 Chromium suites.
 
-## Scope
-Shared state preserves view settings and phase choices during navigation until reload. Step 5 checks count, independence and symmetry using retained patterns, without silently filling unanswered signs. Editing a construction resets its explanation; no success badge is cached in state. The preview is ungraded and 2D schematic. Steps 6–9, a 3D camera, MO ladder/filling, Practice, Blind and saved reports are not implemented in the Guided UI. O 2s remains symmetry-compatible, not symmetry-forbidden. No supplied course PDFs, screenshots or transcripts are published.
+Serve over HTTP, not file://. The application is static with relative imports/assets and no backend, account or secret. The branch/PR H2O workflow runs both the installed-source full runner and the dedicated late-step Chromium suite. Old green checks do not verify a new head. The legacy runner's 60 renders cover Steps 1–5; late Node snapshots and interactive browser checks are separate coverage. Source ZIPs, logs, reports and screenshots are retained by CI.
 
-## CI and Pages
-The workflow verifies pushes to guided/h2o-complete-set and hardening/verification-candidate and pull requests targeting main. Reports identify the tested commit; previous green runs do not verify a new commit. Logs, screenshots, source hashes and source ZIPs are retained for 14 days. A successful installed-source run must leave tracked file contents unchanged.
+## Scientific and interaction boundaries
 
-This follow-up changes neither main nor Pages settings and does not deploy. Merge requires separate approval after fresh CI evidence. Actual screen-reader speech, Firefox/WebKit, native zoom, touch hardware, live Pages and H₂O course-order provenance remain independent checks.
+O 2s is symmetry-compatible but neglected for energy mismatch in the course model. O 2py retains B2 symmetry despite zero sampled ligand coupling. Every individual MO outcome is checked; aggregate counts alone are insufficient. Full energy ordering remains partly unverified. Step 9 explicitly uses the stored course-reference diagram without overwriting learner placements. Every occupancy including zero requires an answer. No canonical ligand signs or fill answers are substituted.
 
-See docs/BATCH-B.md for the current checkpoint and merge gate. docs/BATCH-A.md, docs/STEP4-UI.md and docs/UI-PREVIEW.md are historical checkpoints, not claims of current CI success.
+Navigation remains available with incomplete work; dependent checks explain blocked prerequisites. Upstream edits clear dependent work with notices. State resets on reload. Late Reset preserves constructions/preferences; Restart clears all. Verdicts are derived, not stored success badges.
+
+## Remaining gates
+
+Candidate source and test preparation are not passing verification. Fresh candidate-head CI and review remain required. No other Guided molecules, camera, calculated MO surfaces, Practice/Blind, saved reports, package-version bump, tag/release or deployment is included. Actual screen-reader speech, Firefox/WebKit, native zoom, real touch, course-order provenance and live Pages remain unverified. Merge/deployment require separate approval. No supplied copyrighted PDFs/screenshots/transcripts are published.
+
+See docs/H2O-FUNCTIONAL-WORKFLOW.md. Earlier Batch A/B and UI documents are historical checkpoints; docs/STATUS.md is historical engine/course status, not current UI or CI evidence.
