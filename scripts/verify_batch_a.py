@@ -1,8 +1,7 @@
-"""Run Batch A in a complete checkout; write reports and source artifacts, never git commits."""
+"""Verify installed Batch A/B source without rewriting tracked files; emit CI evidence."""
 import argparse
 import functools
 import hashlib
-import html
 import http.server
 import importlib.metadata
 import json
@@ -31,7 +30,7 @@ class ScreenParser(HTMLParser):
 
 def check_screens(path):
     screens=json.loads(path.read_text())
-    if not isinstance(screens,list) or len(screens)!=48:raise AssertionError('Expected 48 UI states')
+    if not isinstance(screens,list) or len(screens)!=60:raise AssertionError('Expected 60 UI states: 5 steps x 2 axes x 2 guides x 3 phase states')
     for i,markup in enumerate(screens):
         parser=ScreenParser();parser.feed(markup)
         if len(parser.ids)!=len(set(parser.ids)):raise AssertionError(f'Duplicate ID in state {i}')
@@ -40,15 +39,15 @@ def check_screens(path):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--apply-recipe',action='store_true')
-    args=ap.parse_args()
+    ap.add_argument('--apply-recipe',action='store_true',help='Legacy compatibility flag; installed source is required and no recipe is applied')
+    ap.parse_args()
     root=Path(__file__).resolve().parents[1]
-    tracked=subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
-    tracked=[p for p in tracked if p]
-    before={p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in tracked if (root/p).is_file()}
+    tracked=[p for p in subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0') if p]
+    def hashes():return {p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in tracked if (root/p).is_file()}
+    before=hashes()
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
     out=root/'verification-output';out.mkdir(exist_ok=True)
-    report={'sourceCommit':head,'startedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'checks':[]}
+    report={'sourceCommit':head,'mode':'installed-source-no-rewrite','startedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'checks':[]}
     def command(name,argv,env=None,timeout=180):
         start=time.monotonic()
         try:
@@ -67,24 +66,13 @@ def main():
         command('node-version',['node','--version'])
         command('npm-version',['npm','--version'])
         report['python']=sys.version
-        try:report['playwright']=importlib.metadata.version('playwright')
-        except importlib.metadata.PackageNotFoundError:report['playwright']='not installed'
-        helper=root/'src/engine/hardening.js'
-        if not helper.exists():
-            if not args.apply_recipe:raise RuntimeError('Hardening not installed: use --apply-recipe in a disposable checkout')
-            result=command('apply-recipe',[sys.executable,'scripts/hardening_recovery.py','--apply'])
-            if result['exitCode']:raise RuntimeError('Recovery application failed; applied tests were not run')
-            report['mode']='recipe-applied-locally'
-        else:report['mode']='already-applied-source'
-        package_path=root/'package.json'
-        package=json.loads(package_path.read_text())
-        scripts=package['scripts']
-        for test in ['tests/hardening.mjs','tests/ui-zero.mjs']:
-            if test not in scripts['test']:scripts['test']+=' && node '+test
-        scripts['test:hardening']='node tests/hardening.mjs'
-        scripts['test:ui']='node tests/ui-preview.mjs && node tests/ui-zero.mjs'
-        package_path.write_text(json.dumps(package,indent=2)+'\n')
-        report['testWiringUpdatedLocally']=True
+        report['playwright']=importlib.metadata.version('playwright')
+        if not (root/'src/engine/hardening.js').is_file():raise RuntimeError('Installed hardening source required; this runner never reapplies the recovery recipe')
+        scripts=json.loads((root/'package.json').read_text())['scripts']
+        required={'test':['tests/run.mjs','tests/stage2.mjs','tests/hardening.mjs','tests/ui-zero.mjs','tests/step5.mjs'],'test:ui':['tests/ui-preview.mjs','tests/ui-zero.mjs','tests/step5.mjs']}
+        for key,paths in required.items():
+            if any(('node '+p) not in scripts.get(key,'') for p in paths):raise RuntimeError(f'Missing permanent test wiring in {key}; package.json was not rewritten')
+        report['checks'].append({'name':'permanent-test-wiring','exitCode':0})
         syntax=[]
         for p in sorted((root/'src').rglob('*'))+sorted((root/'tests').glob('*.mjs')):
             if p.suffix in ['.js','.mjs']:
@@ -96,9 +84,11 @@ def main():
         report['syntax']=syntax
         report['checks'].append({'name':'syntax','exitCode':int(any(r['exitCode'] for r in syntax))})
         command('npm-test',['npm','test'])
-        env={**os.environ,'UI_RENDER_DUMP':str(out/'ui-states.json')}
-        command('ui-preview',['node','tests/ui-preview.mjs'],env=env)
-        try:report['screenValidation']=check_screens(out/'ui-states.json');code=0
+        dump=out/'ui-states.json'
+        if dump.exists():dump.unlink()
+        env={**os.environ,'UI_RENDER_DUMP':str(dump)}
+        command('npm-test-ui',['npm','run','test:ui'],env=env)
+        try:report['screenValidation']=check_screens(dump);code=0
         except Exception as exc:report['screenValidation']={'error':repr(exc)};code=1
         report['checks'].append({'name':'screen-ids-aria','exitCode':code})
         class Handler(http.server.SimpleHTTPRequestHandler):
@@ -108,12 +98,13 @@ def main():
         threading.Thread(target=server.serve_forever,daemon=True).start()
         url=f'http://127.0.0.1:{server.server_port}/{urllib.parse.quote(root.name)}/'
         report['localURL']=url
-        for name,path,extra in [('browser-announcements','tests/browser-announcements.py',[]),('browser-step4','tests/browser-step4.py',['--screenshots',str(out/'screenshots')])]:
+        suites=[('browser-announcements','tests/browser-announcements.py',[]),('browser-step4','tests/browser-step4.py',['--screenshots',str(out/'screenshots')]),('browser-step5','tests/browser-step5.py',['--screenshots',str(out/'screenshots')])]
+        for name,path,extra in suites:
             result=command(name,[sys.executable,path,url]+extra)
             try:
                 browser_report=json.loads(result['stdout'])
                 report[name]=browser_report
-                if browser_report.get('failed',0):result['exitCode']=1
+                if browser_report.get('failed')!=0 or not isinstance(browser_report.get('passed'),int) or browser_report['passed']<=0:raise ValueError('Browser report missing successful checks or reports failures')
             except Exception as exc:
                 result['exitCode']=1;result['reportParseError']=repr(exc)
     except Exception:
@@ -122,35 +113,34 @@ def main():
         print(report['fatalError'],file=sys.stderr)
     finally:
         if server:server.shutdown();server.server_close()
-        helper='src/engine/hardening.js'
-        source_paths=sorted(set(tracked+([helper] if (root/helper).is_file() else [])))
-        after={p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in source_paths if (root/p).is_file()}
+        after=hashes()
         report['sourceHashesBefore']=before
         report['sourceHashesAfter']=after
-        report['changedLocally']=[p for p in after if before.get(p)!=after[p]]
-        overlay=set(report['changedLocally'])|{'tests/hardening.mjs','tests/ui-zero.mjs','scripts/verify_batch_a.py','requirements-verification.txt','docs/BATCH-A.md','.github/workflows/batch-a.yml'}
+        report['changedLocally']=[p for p in sorted(set(before)|set(after)) if before.get(p)!=after.get(p)]
+        report['checks'].append({'name':'tracked-source-unchanged','exitCode':int(before!=after)})
         try:
-            for name,paths in [('applied-source.zip',source_paths),('source-overlay.zip',sorted(overlay))]:
+            overlay=[p for p in tracked if p.startswith(('src/ui/','tests/','docs/','.github/workflows/')) or p in ['package.json','README.md','scripts/verify_batch_a.py','requirements-verification.txt','src/engine/hardening.js']]
+            for name,paths in [('applied-source.zip',tracked),('source-overlay.zip',overlay)]:
                 with zipfile.ZipFile(out/name,'w',zipfile.ZIP_DEFLATED) as z:
                     for p in paths:
                         if (root/p).is_file():z.write(root/p,p)
                 with zipfile.ZipFile(out/name) as z:
                     if z.testzip() is not None:raise RuntimeError('Archive integrity failure')
-            patch=subprocess.run(['git','diff','--binary'],cwd=root,capture_output=True,text=True)
+            patch=subprocess.run(['git','diff','--binary','HEAD'],cwd=root,capture_output=True,text=True,check=True)
             (out/'applied-tracked-files.patch').write_text(patch.stdout)
-            report['patchNote']='The untracked hardening.js module is included in both ZIPs, not in git diff.'
+            report['patchNote']='Installed source is tracked; a successful no-rewrite run has no tracked-file changes. ZIPs contain the tested source.'
         except Exception:
             report['artifactError']=traceback.format_exc()
             report['checks'].append({'name':'artifacts','exitCode':1})
         report['passed']=sum(r['exitCode']==0 for r in report['checks'])
         report['failed']=sum(r['exitCode']!=0 for r in report['checks'])
         (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-        summary=f"# Batch A verification\n\nSource commit: `{head}`\n\nMode: `{report.get('mode','setup-failed')}`\n\n| Check | Result |\n|---|---|\n"
+        summary=f"# Batch A/B installed-source verification\n\nSource commit: `{head}`\n\nMode: `{report['mode']}`\n\n| Check | Result |\n|---|---|\n"
         for r in report['checks']:summary+=f"| {r['name']} | {'PASS' if r['exitCode']==0 else 'FAIL'} |\n"
-        summary+='\nLocal checks only: no live Pages, actual screen-reader speech, Firefox/WebKit, native zoom or real touch verification. No repository commit, push or deployment was performed by this runner.\n'
+        summary+='\nLocal Chromium checks only: no live Pages, actual screen-reader speech, Firefox/WebKit, native zoom or real touch verification. The runner does not commit, push, merge or deploy.\n'
         (out/'SUMMARY.md').write_text(summary)
         if os.environ.get('GITHUB_STEP_SUMMARY'):
             with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(summary)
-    return 1 if report['failed'] else 0
+    return int(report['failed']>0)
 
 if __name__=='__main__':raise SystemExit(main())
