@@ -1,10 +1,12 @@
 {
   "name": "lgo-lab",
-  "version": "0.1.0-engine",
+  "version": "0.2.1-stage2",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node tests/run.mjs",
+    "test": "node tests/run.mjs && node tests/stage2.mjs",
+    "test:engine": "node tests/run.mjs",
+    "test:stage2": "node tests/stage2.mjs",
     "dump": "node scripts/dump.mjs"
   }
 }

@@ -1,21 +1,35 @@
-# LGO Lab - build status (Stage 1: engine only)
+# LGO Lab - build status
 
-Run: `npm test` (Node 20) then `npm run dump && python3 scripts/verify_scipy.py` (needs numpy, scipy).
+## Stage 1 (engine) - done, pushed
+Point groups, derived orbital representations, symmetry types without character tables, exact colour feasibility, complete-set validity (Rado), 8 cases, 259 tests, SciPy cross-check (0 mismatches in 4,734 patterns).
 
-## Done and verified
-- Point groups closed from generators; orders C2v 4, D3h 12, Td 24, Oh 48.
-- Orbital signed-permutation representations derived from geometry (including allyl p-pi sign reversal); representation law checked.
-- Irreps found without a hand-typed character table (class-sum / central-character method), including multiplicity > 1 (full allyl basis: b2 twice).
-- Cases in the engine: H2O, cyclic H3+, BH3, CH4, SF6 (radial sigma), octahedral H6 (Tutorial D), allyl (terminal pair and full pi basis).
-- Colour feasibility by exact vertex enumeration (no LP solver), witness + margin re-verified; cross-checked against scipy linprog on 4,734 pattern/irrep combinations with 0 mismatches.
-- Complete-set validity: share-out among irreps + independence by Rado's theorem (no precomputed triple tables).
-- Tests (259 checks) include: SF6 four-plus-two merge accepted; rotated T1u triple (3 red/3 blue) accepted; dependent T1u triple rejected; CH4 in-with-out set rejected; all three CH4 pair splits give the same colourings; (1,-1,-1) and (1,1,1,1,-1,-1) are valid colourings but not eigenvectors; degenerate members mix under symmetry; H3+ has exactly 12 of 27 achievable E' patterns.
+## Stage 2 (course data and graders) - done
+- `src/engine/feedback.js`: 20 feedback codes, each with layer (validity / course / model) and basis (theorem / convention / course statement / model assumption).
+- `src/course/data.js`: course routes, partners, ladders, electron counts, bonds, claim labels and a `verify` list, for H2O, CH4, SF6, H3+, BH3, octahedral H6, allyl and the diborane B-H-B bridge.
+- `src/engine/grading.js`: construction, matching, MO construction, ordering (partial order, MO and LGO level), filling (Aufbau + Hund), bond order.
+- `src/course/diatomics.js`: one template for H2..Ne2 (s-p mixing swaps sigma(2pz) and pi(2p) for Li2-N2).
+- `src/cases/specs2.js`: the B-H-B bridge case.
+- `tests/stage2.mjs`: 253 checks (incl. engine regression).
+
+## Checked against the lecture screenshots (SF6 slides 14-19)
+- LGO1'..LGO10' construction sequence matches our course route; slide labels are stored in `slideLabels`.
+- LGO levels as drawn on slides 17-18: a1g (LGO9') < t1u (LGO2', 4', 6') < eg (LGO8', 10'). Now graded for SF6 (`lgoOrder`).
+- MO ladder on slide 18: a1g < t1u (bonding) < eg (nonbonding) < a1g* < t1u*; S 3s below 3p; no d orbitals. SF6 ladder relations promoted from "drawn" to "required".
+- Tutorial D (octahedral H6): only "a1g lowest" is required (tutorial key); t1u < eg is reported as drawn on the slide but not graded.
+- The slide draws equal-size lobes for LGO10'; the exact amplitudes (1,1,1,1,-2,-2) come from the symmetry calculation, not from the slide.
+
+## Design decisions
+- A specific course LGO overlaps only the central function it is aligned with (feedback X6 for same-type orthogonal picks).
+- A rotated valid LGO pairs with a combination of central functions: any non-empty compatible subset is accepted (X3).
+- H2O O 2s: symmetry-compatible, neglected by the course for the energy gap (X4).
+- SF6 S 3d: symmetry-compatible with Eg but outside the course model (X5).
+- Groupings: validity never depends on how sites were grouped. For SF6, 7 of 15 pair groupings (all-trans, and one trans + two cis) complete the lecture procedure with a valid colour set; the 8 all-cis ones do not under that procedure. Route checking comes in Stage 3.
+
+## Engine bug found and fixed
+`validateSet` crashed when a whole slot was null; it now reports `incomplete`.
+
+## Still to verify against the original slides (`verify` in data.js)
+H2O bonding-MO order; CH4 antibonding order; tutor's routes for H3+ and allyl; individual lobe colours in LGO8'/LGO10' (read from screenshots).
 
 ## Not built yet
-UI, three.js rendering, Guided/Practice/Blind modes, reports, diatomics, textbook pack, linear H3+/BeH2 comparisons, uranium sandbox, GitHub Pages packaging, provenance registry.
-
-## Limits of the verification
-- The scipy check re-implements the same geometric model; it is not an independent check of the model's chemistry.
-- Adjacency (Hueckel-type) spectra are labelled model-only; they are not course statements.
-- Central-orbital vectors use point evaluation at bond directions: valid for s and radial-sigma ligands only, NOT for oriented pi ligands (uranium/benzene will need a different treatment).
-- Symmetry labels (A1, T2, ...) come from probe characters in each spec, checked against derived characters; probes are a small amount of typed data per case.
+UI (Stage 3), remaining Guided cases in the UI (4), Practice and Blind (5), textbook pack and comparisons (6), uranium report (7), release (8).

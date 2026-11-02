@@ -7,7 +7,7 @@ import { rankOf } from './linalg.js';
 
 export function validateSet(model, patterns) {
   const n = model.n;
-  if (patterns.length !== n || patterns.some((p) => p.length !== n || p.some((x) => x === null || x === undefined)))
+  if (patterns.length !== n || patterns.some((p) => !p || p.length !== n || p.some((x) => x === null || x === undefined)))
     return { status: 'incomplete', issues: [{ type: 'count', detail: `need ${n} fully specified patterns` }] };
   const issues = [];
   if (patterns.some((p) => p.every((x) => x === 0))) return { status: 'invalid', issues: [{ type: 'zero-vector' }] };
