@@ -1,0 +1,10 @@
+{
+  "name": "lgo-lab",
+  "version": "0.1.0-engine",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run.mjs",
+    "dump": "node scripts/dump.mjs"
+  }
+}
