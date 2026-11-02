@@ -1,29 +1,20 @@
-# LGO Lab (engine, stage 1)
+# LGO Lab — Steps 1–3 preview
 
-Scientific engine for a ligand-group-orbital (LGO) trainer. **This is the engine only: there is no UI yet.**
+A mobile-first LGO/MO learning application for NTU CM2021, under development. The root entry page now connects three H₂O Guided layout steps: valence basis, ligand-fragment separation and the in-phase LGO with global phase reversal. The existing scientific engine and course data are unchanged.
 
-## Run it
-
-Requirements: Node 20+. The optional cross-check needs Python 3 with numpy and scipy.
-
+## Preview and test
+```sh
+python3 -m http.server 8000
+# Open http://localhost:8000/
+npm test
+node tests/ui-preview.mjs
 ```
-npm test                                   # 259 checks, Node only
-npm run dump                               # writes build/engine-dump.json
-python3 scripts/verify_scipy.py            # independent LP cross-check (numpy + scipy)
-```
+Serve over HTTP, not file://, because the page uses browser modules. No UI dependencies or build step are required. Imports and assets are relative for a Pages project subdirectory.
 
-Expected: `259 passed, 0 failed`, then `patterns checked 4734 mismatches 0`.
+## Scope
+Shared state preserves view settings and phase choices during navigation until reload. This is ungraded, 2D schematic presentation. No 3D camera, Steps 4–9, MO ladder/filling, engine-connected validity checks, Practice, Blind or reports are finished. O 2s is symmetry-compatible, not symmetry-forbidden. No course PDFs, screenshots or transcripts are published.
 
-## What is in here
+## Pages
+Committing source does not enable Pages. An administrator can select Settings > Pages > Deploy from a branch > main > /(root), then Save. Use GitHub's reported deployment URL after a successful build. Existing branch-based Pages may auto-deploy a commit. This integration does not change Pages settings.
 
-- `src/engine/` linear algebra, point-group closure, orbital representations derived from geometry, symmetry-type decomposition without character tables, colour (sign) feasibility, complete-set validity.
-- `src/cases/specs.js` H2O, cyclic H3+, BH3, CH4, SF6 (S 3s/3p sigma model), octahedral H6, allyl (terminal pair and full pi basis).
-- `tests/run.mjs` test suite. `scripts/` dump and SciPy cross-check. `docs/STATUS.md` what is and is not done.
-
-## Not built yet
-
-UI, 3D view, Guided/Practice/Blind modes, reports, diatomics, textbook pack, uranium sandbox, GitHub Pages packaging.
-
-## Limits
-
-The SciPy check re-implements the same geometric model, so it checks the code, not the chemistry. Energy-ordering numbers from the adjacency model are illustrative only. No course PDFs or transcripts are included.
+See docs/UI-PREVIEW.md for executed checks and remaining review. Historical engine test counts are not fresh verification.

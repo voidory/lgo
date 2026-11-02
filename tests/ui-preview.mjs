@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {specs} from '../src/cases/specs.js';
+import {initialState,reduce,coefficients,Coefficient} from '../src/ui/state.mjs';
+import {view,molecule} from '../src/ui/view.mjs';
+const water=specs.find(s=>s.id==='h2o');
+let count=0;
+const eq=(a,b)=>{assert.deepEqual(a,b);count++;};
+let s=initialState();
+eq(reduce(s,{type:'back'}).step,1);
+eq(reduce({...s,step:3},{type:'next'}).step,3);
+eq(reduce(s,{type:'flip'}),s);
+eq(reduce(s,{type:'same'}),s);
+eq(coefficients(s),[1,null]);
+eq(new Set(Object.values(Coefficient)).size,4);
+s=reduce(reduce(s,{type:'next'}),{type:'next'});
+eq(s.step,3);
+s=reduce(s,{type:'same'});eq(coefficients(s),[1,1]);
+s=reduce(s,{type:'flip'});eq(coefficients(s),[-1,-1]);
+s=reduce(reduce(s,{type:'back'}),{type:'next'});eq(coefficients(s),[-1,-1]);
+s=reduce(s,{type:'flip'});eq(coefficients(s),[1,1]);
+s=reduce(s,{type:'axes',value:false});
+s=reduce(s,{type:'guides',value:false});
+s=reduce(s,{type:'reset'});eq(coefficients(s),[1,null]);eq(s.axes,false);eq(s.guides,false);
+const rendered=[];
+for(const step of [1,2,3])for(const axes of [true,false])for(const guides of [true,false])for(const phase of ['unanswered','positive','flipped']){
+ const state={step,axes,guides,hb:phase==='unanswered'?null:1,flipped:phase==='flipped'};
+ const html=view(state,water);rendered.push(html);
+ eq(html.includes('Step 0'+step+' of 09'),true);
+ eq(html.includes('data-action="next"'),step<3);
+ eq(html.includes('id="back" data-action="back" disabled'),step===1);
+ eq(html.includes('data-setting="guides"'),step>1);
+ eq(molecule(state,water).includes('M220 226V32'),axes);
+ if(step===3){eq(html.includes('phase-unanswered'),phase==='unanswered');eq(html.includes('phase-minus'),phase==='flipped');}
+}
+eq(water.orbitals[0].pos[1],0);
+eq(water.orbitals[1].pos[1],0);
+eq(Math.abs(water.orbitals[0].pos[0]+water.orbitals[1].pos[0])<1e-12,true);
+for(const asset of ['src/ui/app.mjs','src/ui/state.mjs','src/ui/view.mjs','src/ui/guided.css','src/cases/specs.js'])eq(fs.existsSync(asset),true);
+console.log(JSON.stringify({assertionsPassed:count,renderedStates:rendered.length}));
+if(process.env.UI_RENDER_DUMP)fs.writeFileSync(process.env.UI_RENDER_DUMP,JSON.stringify(rendered));
