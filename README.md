@@ -1,9 +1,32 @@
 # LGO Lab — H2O functional UI candidate
 
-The root application connects Guided Steps 1–9: retained ligand construction, complete-set checking, oxygen symmetry matching, individual course-model MO outcomes, supported partial ordering, explicit reference-diagram filling and per-bond interpretation. This is an ungraded 2D schematic candidate, not a verified release or completed spatial renderer.
+Mobile-first CM2021 application. The root connects Guided Steps 1–9: retained ligand construction, complete-set checking, oxygen symmetry matching, individual course-model MO outcomes, supported partial ordering, reference filling and per-bond interpretation. This is an ungraded 2D schematic candidate, not a verified release or completed spatial renderer.
 
-Preview over HTTP with `python3 -m http.server 8000`. Run `npm test`, `npm run test:ui` and, with verification dependencies installed, `python3 scripts/verify_batch_a.py` in a complete Git checkout. Existing navigation regressions are updated with the root wiring. Dedicated late-UI Node/browser tests and their CI wiring are the pending verification follow-up; old green checks do not validate this candidate.
+## Preview and verify
 
-O 2s is symmetry-compatible but neglected for energy mismatch in the course model. O 2py retains B2 AO symmetry despite zero sampled coupling. Full energy ordering remains partly unverified. Filling explicitly uses the supplied course reference without overwriting learner placements; every occupancy including zero requires an answer. Upstream edits clear dependent work with notices. State resets on reload.
+```sh
+python3 -m http.server 8000
+# Open http://localhost:8000/
+npm test
+npm run test:ui
+npm run test:h2o
+python3 -m pip install -r requirements-verification.txt
+python3 -m playwright install --with-deps chromium
+python3 scripts/verify_batch_a.py
+# Additionally, with the preview server running:
+python3 tests/browser-h2o.py http://localhost:8000/ --screenshots verification-output/screenshots
+```
 
-No other Guided molecules, 3D camera, calculated MO surfaces, Practice/Blind, saved reports, tag/release or deployment is added. No supplied copyrighted course material is published. Actual screen-reader speech, Firefox/WebKit, native zoom, real touch, course-order provenance and live Pages remain unverified. Merge/deployment require separate approval. docs/H2O-FUNCTIONAL-WORKFLOW.md currently records the preceding model checkpoint; its integration/verification update is pending.
+Serve over HTTP, not file://. The application is static with relative imports/assets and no backend, account or secret. The branch/PR H2O workflow runs both the installed-source full runner and the dedicated late-step Chromium suite. Old green checks do not verify a new head. The legacy runner's 60 renders cover Steps 1–5; late Node snapshots and interactive browser checks are separate coverage. Source ZIPs, logs, reports and screenshots are retained by CI.
+
+## Scientific and interaction boundaries
+
+O 2s is symmetry-compatible but neglected for energy mismatch in the course model. O 2py retains B2 symmetry despite zero sampled ligand coupling. Every individual MO outcome is checked; aggregate counts alone are insufficient. Full energy ordering remains partly unverified. Step 9 explicitly uses the stored course-reference diagram without overwriting learner placements. Every occupancy including zero requires an answer. No canonical ligand signs or fill answers are substituted.
+
+Navigation remains available with incomplete work; dependent checks explain blocked prerequisites. Upstream edits clear dependent work with notices. State resets on reload. Late Reset preserves constructions/preferences; Restart clears all. Verdicts are derived, not stored success badges.
+
+## Remaining gates
+
+Candidate source and test preparation are not passing verification. Fresh candidate-head CI and review remain required. No other Guided molecules, camera, calculated MO surfaces, Practice/Blind, saved reports, package-version bump, tag/release or deployment is included. Actual screen-reader speech, Firefox/WebKit, native zoom, real touch, course-order provenance and live Pages remain unverified. Merge/deployment require separate approval. No supplied copyrighted PDFs/screenshots/transcripts are published.
+
+See docs/H2O-FUNCTIONAL-WORKFLOW.md. Earlier Batch A/B and UI documents are historical checkpoints; docs/STATUS.md is historical engine/course status, not current UI or CI evidence.

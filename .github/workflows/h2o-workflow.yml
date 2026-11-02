@@ -30,6 +30,21 @@ jobs:
         run: |
           set -euo pipefail
           "$RUNNER_TEMP/lgo-venv/bin/python" scripts/verify_batch_a.py
+      - name: H2O interactive Steps 6-9
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 --bind 127.0.0.1 > verification-output/h2o-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server"' EXIT
+          for i in $(seq 1 50); do
+            if curl --fail --silent http://127.0.0.1:8000/ > /dev/null; then break; fi
+            sleep 0.1
+          done
+          git rev-parse HEAD > verification-output/h2o-source-commit.txt
+          "$RUNNER_TEMP/lgo-venv/bin/python" tests/browser-h2o.py http://127.0.0.1:8000/ --screenshots verification-output/screenshots 2>&1 | tee verification-output/h2o-browser.json
+          git diff --exit-code HEAD
       - name: Preserve logs and tested source
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

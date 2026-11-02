@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {initialState,reduce,constructionPatterns,coefficients} from '../src/ui/state.mjs';
+import {evaluateH2O,h2oReference} from '../src/ui/h2o-model.mjs';
+import {view} from '../src/ui/view.mjs';
+import {specs} from '../src/cases/specs.js';
+const water=specs.find(s=>s.id==='h2o'),{system}=h2oReference();
+let count=0;const eq=(a,b)=>{assert.deepEqual(a,b);count++;};
+const act=(s,type,rest={})=>reduce(s,{type,...rest});
+const edit=(s,type,value,rest={})=>act(s,'h2o-edit',{edit:{type,value,...rest}});
+let s=initialState();eq(act({...s,step:5},'next').step,6);eq(act({...s,step:9},'next').step,9);
+for(let i=0;i<5;i++)s=act(s,'next');eq(s.step,6);s=act(s,'check-h2o');eq(evaluateH2O(s.h2o,constructionPatterns(s)).matching.status,'blocked');
+s=act(s,'to-set');s=act(s,'edit-sum');s=act(s,'same');s=act(s,'next');s=act(s,'opposite');s=act(s,'flip');s=act(s,'next');s=act(s,'next');
+eq(edit(s,'level',0,{id:'n:s'}),s);
+s=edit(s,'match',['s','pz'],{slot:0});s=edit(s,'match',['px'],{slot:1});s=act(s,'check-h2o');eq(s.h2oChecks[0],true);
+s=act(s,'next');s=edit(s,'partner','pz',{slot:0});s=edit(s,'partner','px',{slot:1});s=edit(s,'neglect','energy');
+eq((view(s,water).match(/class="construction-flow"/g)||[]).length,6);
+for(const m of system.mos)s=edit(s,'product',m.kind,{id:m.id});s=act(s,'check-h2o');eq(evaluateH2O(s.h2o,constructionPatterns(s)).construction.status,'correct');
+s=act(s,'next');for(const m of system.mos)s=edit(s,'level',m.kind==='antibonding'?5:0,{id:m.id});s=act(s,'check-h2o');eq(evaluateH2O(s.h2o,constructionPatterns(s)).ordering.status,'correct');
+s=act(s,'next');s=edit(s,'reference',true);
+for(const m of system.mos)if(m.id!=='a:LGO2+px')s=edit(s,'occupancy',m.kind==='antibonding'?0:2,{id:m.id});
+eq(evaluateH2O(s.h2o,constructionPatterns(s)).filling.details.status,'unanswered');
+s=edit(s,'occupancy',0,{id:'a:LGO2+px'});s=edit(s,'bond-order',1);s=act(s,'check-h2o');eq(evaluateH2O(s.h2o,constructionPatterns(s)).complete,true);eq(view(s,water).includes('data-h2o-complete="true"'),true);
+const saved=s,before=JSON.stringify(s);view(s,water);eq(JSON.stringify(s),before);
+s=act(s,'back');s=edit(s,'level',1,{id:'n:s'});eq(s.h2o.occupancies,{});eq(s.h2o.reference,null);eq(s.h2oChecks.slice(2),[false,false]);eq(saved.h2o.occupancies['n:s'],2);
+s=act(saved,'to-set');s=act(s,'edit-difference');s=act(s,'reset');eq(s.h2o,initialState().h2o);eq(s.h2oChecks,[false,false,false,false]);
+const snapshots=[];
+for(const step of [6,7,8,9])for(const axes of [false,true])for(const completed of [false,true]){
+ const q=completed?{...saved,step,axes}:{...initialState(),step,axes};
+ const html=view(q,water);snapshots.push(html);
+ eq(html.includes('undefined'),false);eq((html.match(/id="step-title"/g)||[]).length,1);eq((html.match(/role="status"/g)||[]).length,1);eq(html.includes('data-action="next"'),step<9);
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);eq(new Set(ids).size,ids.length);
+}
+const reset=act(saved,'reset-h2o');eq(constructionPatterns(reset),constructionPatterns(saved));eq(reset.axes,saved.axes);eq(reset.h2o,initialState().h2o);
+eq(act(saved,'restart'),initialState());
+if(process.env.H2O_RENDER_DUMP)fs.writeFileSync(process.env.H2O_RENDER_DUMP,JSON.stringify(snapshots));
+console.log(JSON.stringify({suite:'h2o-ui',assertionsPassed:count,renderedLateStates:snapshots.length}));
