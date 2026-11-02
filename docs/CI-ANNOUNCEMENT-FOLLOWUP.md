@@ -1,0 +1,7 @@
+# CI regression follow-up: composed announcements
+
+Baseline: PR #4 head 3c17c88c087b8460ed674823606aba061ce27f21. All three observed verification jobs failed. Direct public job/annotation fetches failed; no failure log or full report was retrieved. Do not claim this is the sole CI failure or that the correction passes CI before fresh results.
+
+Source inspection identifies a deterministic old assertion mismatch: app.mjs announces phase feedback plus the visible dependency-reset notice for ligand edits, while the existing browser test compares the live text against phase feedback alone. The correction checks the exact concatenation of the two visible messages after assignment, global flip and reset, and independently requires the reset notice to identify cleared downstream answers. It retains the existing persistent-node, one-live-region, keyboard/focus, view-toggle silence, navigation clearing, reset-preference and identical-message suppression assertions.
+
+Local evidence: Python syntax compilation and a narrow Node replay of the committed reducer/app composition expression with fixture phase text and an unused H2O-model reset stub. The old phase-only comparison fails for assignment, global flip and reset; the combined-visible-message contract succeeds. This is not a browser test, production engine regression or fresh CI evidence. No production application, scientific engine, acceptance rule or workflow is changed by this follow-up. PR remains draft pending verification and review.
