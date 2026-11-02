@@ -27,7 +27,7 @@ app.addEventListener('click',event=>{
    app.replaceChildren();
    announcements.clear();
  }
- render(action==='same'?'flip':action==='reset'?'same':previousStep!==state.step?'step-title':button.id,['same','flip','reset'].includes(action));
+ render(['same','opposite'].includes(action)?'flip':action==='reset'?(state.step===4?'opposite':'same'):previousStep!==state.step?'step-title':button.id,['same','opposite','flip','reset'].includes(action));
 });
 app.addEventListener('change',event=>{
  const setting=event.target.dataset.setting;
