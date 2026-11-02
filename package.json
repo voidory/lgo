@@ -4,9 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node tests/run.mjs && node tests/stage2.mjs",
+    "test": "node tests/run.mjs && node tests/stage2.mjs && node tests/hardening.mjs && node tests/ui-zero.mjs",
+    "test:hardening": "node tests/hardening.mjs",
     "test:engine": "node tests/run.mjs",
     "test:stage2": "node tests/stage2.mjs",
-    "dump": "node scripts/dump.mjs"
+    "dump": "node scripts/dump.mjs",
+    "test:ui": "node tests/ui-preview.mjs && node tests/ui-zero.mjs"
   }
 }

@@ -7,8 +7,9 @@ const details=(id,title,text)=>`<details data-detail="${id}"><summary>${title}</
 const oxygen='<span class="orbital">2s</span><span class="orbital">2pₓ</span><span class="orbital">2pᵧ</span><span class="orbital">2p𝓏</span>';
 function pattern(s){
  const [a,b]=coefficients(s);
- if(b===null)return 'Hₐ positive; Hᵦ unanswered (not zero).';
- return `Hₐ ${a>0?'positive':'negative'}; Hᵦ ${b>0?'positive':'negative'}. ${a*b>0?'Same':'Opposite'} relative phase.`;
+ const describe=v=>v===null?'unanswered (not zero)':v===0?'zero coefficient (no lobe)':v>0?'positive':'negative';
+ const relative=b===null||a===0||b===0?'':` ${a*b>0?'Same':'Opposite'} relative phase.`;
+ return `Hₐ ${describe(a)}; Hᵦ ${describe(b)}.${relative}`;
 }
 export function molecule(s,water){
   const positions=water.orbitals.map(o=>[220+128*o.pos[0],226-128*o.pos[2]]);
@@ -20,6 +21,7 @@ export function molecule(s,water){
   positions.forEach(([x,y],i)=>{const value=coefficients(s)[i];const phase=value===null?'unanswered':value>0?'plus':'minus';svg+=`<text class="site" x="${x}" y="${y-45}" text-anchor="middle">${i===0?'Hₐ':'Hᵦ'}${s.step>1?' 1s':''}</text>`;
     if(s.step===1)svg+=`<circle cx="${x}" cy="${y}" r="18" fill="#fffdf5" stroke="#323b38" stroke-width="2"/><text class="atom" x="${x}" y="${y+7}" text-anchor="middle">H</text>`;
     else if(s.step===2)svg+=`<circle cx="${x}" cy="${y}" r="29" fill="#f5f1e4" stroke="#293a35" stroke-width="1.8"/><text x="${x}" y="${y+6}" text-anchor="middle" fill="#293a35" font-size="17">1s</text>`;
+    else if(value===0)svg+=`<text data-zero-site="${i}" x="${x}" y="${y+6}" text-anchor="middle" fill="#293a35" font-size="12">0 · no lobe</text>`;
     else svg+=`<circle data-site="${i}" class="phase-disc phase-${phase}" cx="${x}" cy="${y}" r="33"/>${value<0?`<circle cx="${x}" cy="${y}" r="33" fill="url(#hatch)"/>`:''}<text class="phase-symbol ${value===null?'unanswered':''}" x="${x}" y="${y+8}" text-anchor="middle">${value===null?'?':value>0?'+':'−'}</text>`;
   });return svg+'</svg>';
 }
