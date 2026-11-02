@@ -1,3 +1,4 @@
+import {inspectSetInput} from './hardening.js';
 // Complete-set validity: n colour patterns can be shared among the isotypic components so that each component gets
 // exactly (its dimension) patterns, every pattern is feasible in its component, and linearly independent vectors with
 // those signs exist. Independence is decided by Rado's theorem on the subspaces N_i = {v in V : v_i = 0 where s_i = 0}
@@ -7,8 +8,8 @@ import { rankOf } from './linalg.js';
 
 export function validateSet(model, patterns) {
   const n = model.n;
-  if (patterns.length !== n || patterns.some((p) => !p || p.length !== n || p.some((x) => x === null || x === undefined)))
-    return { status: 'incomplete', issues: [{ type: 'count', detail: `need ${n} fully specified patterns` }] };
+  const input=inspectSetInput(model,patterns);
+  if(input)return input;
   const issues = [];
   if (patterns.some((p) => p.every((x) => x === 0))) return { status: 'invalid', issues: [{ type: 'zero-vector' }] };
   const keys = patterns.map(patternKey);

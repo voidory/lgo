@@ -1,3 +1,4 @@
+import {deriveCentral,guardFilling,guardMatching,guardConstruction} from './hardening.js';
 // Stage 2 graders. All functions are pure and DOM-free. Every verdict carries a feedback code with its layer
 // (validity / course / model) and the kind of rule it rests on (theorem / convention / course statement / model).
 import { orbitalRep } from './symmetry.js';
@@ -9,7 +10,7 @@ import { fb } from './feedback.js';
 const sum = (a) => a.reduce((s, x) => s + x, 0);
 
 // ---- central-function symmetry types -----------------------------------------------------------------------
-export function centralIrreps(model) {
+function sampledCentralIrreps(model) {
   const out = {};
   for (const c of model.central) out[c.id] = c.irrep;
   const co = model.spec.centralOrbital;
@@ -67,7 +68,7 @@ export function computeBondOrder(system, occ) {
 }
 export const unpairedElectrons = (occ) => Object.values(occ).filter((n) => n === 1).length;
 
-export function gradeFilling(system, occ) {
+function gradeFillingUnchecked(system, occ) {
   const messages = []; const placed = sum(system.mos.map((m) => occ[m.id] || 0));
   if (placed !== system.electrons) { messages.push(fb('F1', { placed, expected: system.electrons })); return { status: 'wrong-count', placed, messages }; }
   const over = system.mos.filter((m) => (occ[m.id] || 0) > 2).map((m) => m.id);
@@ -115,7 +116,7 @@ export function gradeLgoOrdering(course, levels) {
 }
 
 // ---- construction -----------------------------------------------------------------------------------------
-export function gradeConstruction(model, course, patterns) {
+function gradeConstructionUnchecked(model, course, patterns) {
   const messages = []; const courseKeys = new Map(course.lgos.map((l) => [patternKey(l.pattern), l]));
   const perSlot = patterns.map((p, i) => {
     if (!p || p.some((x) => x === null || x === undefined)) return { slot: i, status: 'incomplete', irreps: [] };
@@ -140,7 +141,7 @@ export function gradeConstruction(model, course, patterns) {
 
 // ---- matching LGO <-> central functions ----------------------------------------------------------------
 // input: { lgoId } for a course LGO, or { pattern } for a learner LGO; selected: central ids ticked; none: "nonbonding" ticked.
-export function gradeMatching(model, course, input) {
+function gradeMatchingUnchecked(model, course, input) {
   const messages = []; const cirreps = centralIrreps(model);
   let irrep, lgo = null, rotated = false;
   if (input.lgoId) { lgo = course.lgos.find((l) => l.id === input.lgoId); irrep = lgo.irrep; }
@@ -177,3 +178,10 @@ export function gradeMatching(model, course, input) {
   const courseOk = !wrong.length && !orthogonal.length && !outside.length && !!lgo && (coursePartner ? sel.includes(coursePartner) : sel.length === 0);
   return { status, courseOk, irrep, compatible: compat, wrong, orthogonal, missed: rotated && sel.length ? [] : missed, outside, coursePartner, neglected, rotated, messages };
 }
+
+export {validateOccupancies} from './hardening.js';
+export function centralSymmetry(model){return deriveCentral(model,sampledCentralIrreps(model));}
+export function centralIrreps(model){return Object.fromEntries(Object.entries(centralSymmetry(model)).map(([id,v])=>[id,v.irrep]));}
+export function gradeFilling(system,occ){return guardFilling(system,occ,gradeFillingUnchecked);}
+export function gradeMatching(model,course,input){return guardMatching(model,course,input,gradeMatchingUnchecked,patternKey);}
+export function gradeConstruction(model,course,patterns){return guardConstruction(model,course,patterns,gradeConstructionUnchecked);}
