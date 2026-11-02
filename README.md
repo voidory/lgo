@@ -1,6 +1,6 @@
-# LGO Lab — Steps 1–4 preview
+# LGO Lab — Steps 1–5 preview
 
-A mobile-first LGO/MO learning application for NTU CM2021, under development. The root entry page now connects four H₂O Guided layout steps: valence basis, ligand-fragment separation and the in-phase and out-of-phase LGOs with global phase reversal. Batch A installs input validation and explicit AO-symmetry metadata in the scientific engine; course data remain unchanged. Zero coefficients render without a lobe and remain distinct from unanswered input.
+A mobile-first LGO/MO learning application for NTU CM2021, under development. The root page connects five H₂O Guided steps: valence basis, ligand-fragment separation, sum and difference construction, and an explanatory complete-set check using the existing mathematical engine. Batch A supplies input validation and explicit AO-symmetry metadata; Batch B retains the learner's actual constructions. Course data are unchanged. Zero coefficients remain distinct from unanswered input.
 
 ## Preview and test
 ```sh
@@ -9,15 +9,20 @@ python3 -m http.server 8000
 npm test
 npm run test:ui
 npm run test:hardening
-# Full verification in a complete checkout with requirements-verification.txt installed:
-# python scripts/verify_batch_a.py
+npm run test:step5
+# Full verification in a complete git checkout:
+python3 -m pip install -r requirements-verification.txt
+python3 -m playwright install --with-deps chromium
+python3 scripts/verify_batch_a.py
 ```
-Serve over HTTP, not file://, because the page uses browser modules. No UI dependencies or build step are required. Imports and assets are relative for a Pages project subdirectory.
+Serve over HTTP, not file://. No UI dependencies or build step are required. Imports and assets are relative for a Pages project subdirectory. The verifier requires Node, npm, Python, Git and the pinned browser dependency. It checks permanent package commands without rewriting them, validates 60 rendered states and runs announcement, Step 4 and Step 5 Chromium suites.
 
 ## Scope
-Shared state preserves view settings and phase choices during navigation until reload. This is ungraded, 2D schematic presentation. No 3D camera, Steps 5–9, MO ladder/filling, engine-connected validity checks, Practice, Blind or reports are finished. O 2s is symmetry-compatible, not symmetry-forbidden. No course PDFs, screenshots or transcripts are published.
+Shared state preserves view settings and phase choices during navigation until reload. Step 5 checks count, independence and symmetry using retained patterns, without silently filling unanswered signs. Editing a construction resets its explanation; no success badge is cached in state. The preview is ungraded and 2D schematic. Steps 6–9, a 3D camera, MO ladder/filling, Practice, Blind and saved reports are not implemented in the Guided UI. O 2s remains symmetry-compatible, not symmetry-forbidden. No supplied course PDFs, screenshots or transcripts are published.
 
-## Pages
-Committing source does not enable Pages. An administrator can select Settings > Pages > Deploy from a branch > main > /(root), then Save. Use GitHub's reported deployment URL after a successful build. Existing branch-based Pages may auto-deploy a commit. This integration does not change Pages settings.
+## CI and Pages
+The workflow verifies pushes to guided/h2o-complete-set and hardening/verification-candidate and pull requests targeting main. Reports identify the tested commit; previous green runs do not verify a new commit. Logs, screenshots, source hashes and source ZIPs are retained for 14 days. A successful installed-source run must leave tracked file contents unchanged.
 
-See docs/BATCH-A.md for hardening contracts and verification status, and docs/STEP4-UI.md for the layout checkpoint; docs/UI-PREVIEW.md records the earlier Steps 1–3 checkpoint. Historical engine test counts are not fresh verification.
+This follow-up changes neither main nor Pages settings and does not deploy. Merge requires separate approval after fresh CI evidence. Actual screen-reader speech, Firefox/WebKit, native zoom, touch hardware, live Pages and H₂O course-order provenance remain independent checks.
+
+See docs/BATCH-B.md for the current checkpoint and merge gate. docs/BATCH-A.md, docs/STEP4-UI.md and docs/UI-PREVIEW.md are historical checkpoints, not claims of current CI success.

@@ -22,12 +22,13 @@ app.addEventListener('click',event=>{
  // Capture disclosure state under the old step before changing screens.
  app.querySelectorAll('details[data-detail]').forEach(d=>openDetails.set(`${state.step}:${d.dataset.detail}`,d.open));
  const previousStep=state.step;
- state=reduce(state,{type:action});
+ state=reduce(state,{type:action,operation:button.dataset.operation});
  if(previousStep!==state.step){
    app.replaceChildren();
    announcements.clear();
  }
- render(['same','opposite'].includes(action)?'flip':action==='reset'?(state.step===4?'opposite':'same'):previousStep!==state.step?'step-title':button.id,['same','opposite','flip','reset'].includes(action));
+ const focus=previousStep!==state.step?'step-title':['same','opposite'].includes(action)?'flip':action==='reset'?(state.step===4?'opposite':'same'):action==='check-set'?'check-independence':action==='check-independence'?'check-symmetry':action==='check-symmetry'?'set-result':action==='reset-check'?'check-set':button.id;
+ render(focus,['same','opposite','flip','reset','check-set','check-independence','check-symmetry','reset-check','set-operation'].includes(action));
 });
 app.addEventListener('change',event=>{
  const setting=event.target.dataset.setting;

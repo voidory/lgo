@@ -25,7 +25,7 @@ async def run(url,screenshot_dir=None):
             await check("heading focused on entry",await page.evaluate("document.activeElement.id==='step-title'"))
             await check("canonical reference starts positive pair",await page.locator(".phase-plus").count()==2)
             await check("flip disabled until difference built",await page.locator("#flip").is_disabled())
-            await check("no unsupported Step 5 navigation",await page.locator("#next").count()==0)
+            await check("implemented Step 5 navigation available",await page.locator("#next").count()==1)
             await page.locator("#opposite").focus();await page.keyboard.press("Enter")
             await check("difference has one positive lobe",await page.locator(".phase-plus").count()==1)
             await check("difference has one negative lobe",await page.locator(".phase-minus").count()==1)
