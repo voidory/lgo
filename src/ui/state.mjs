@@ -1,13 +1,18 @@
 // Shared Guided state. Verdicts are derived by the existing scientific engine.
 import {freshH2O,updateH2O} from './h2o-model.mjs';
+import {freshCamera,reduceCamera} from './camera.mjs';
 export const Coefficient=Object.freeze({unanswered:null,positive:1,negative:-1,zero:0});
 const freshCheck=()=>({stage:0,operation:'c2'});
 const checks=()=>[false,false,false,false];
 const changed=state=>({...state,completeSet:freshCheck(),h2o:freshH2O(),h2oChecks:checks(),notice:'Ligand construction changed. All later H₂O answers and checks were cleared.'});
-export function initialState(){return {step:1,hb:null,flipped:false,axes:true,guides:true,difference:{hb:1,flipped:false},completeSet:freshCheck(),h2o:freshH2O(),h2oChecks:checks(),notice:''};}
+export function initialState(){return {step:1,hb:null,flipped:false,axes:true,guides:true,difference:{hb:1,flipped:false},completeSet:freshCheck(),h2o:freshH2O(),h2oChecks:checks(),notice:'',camera:freshCamera()};}
 const phases={match:6,partner:7,neglect:7,product:7,level:8,reference:9,occupancy:9,'bond-order':9};
 const notices={match:'Matching changed; course partners, MO outcomes, ordering and filling were cleared.',partner:'Course partner changed; MO outcomes, ordering and filling were cleared.',neglect:'Interaction approximation changed; MO outcomes, ordering and filling were cleared.',product:'MO outcome changed; ordering and filling were cleared.',level:'Level placement changed; reference acknowledgement, filling and bond order were cleared.',reference:'Reference choice changed; your bond-order answer was cleared.',occupancy:'Occupancy changed; your bond-order answer was cleared.','bond-order':'Bond-order answer changed; check the current answers again.'};
 export function reduce(state,action){
+ if(typeof action.type==='string'&&action.type.startsWith('camera-')){
+  const camera=reduceCamera(state.camera,action);
+  return camera===state.camera?state:{...state,camera};
+ }
  if(action.type==='h2o-edit'){
   const edit=action.edit;
   if(!edit||phases[edit.type]!==state.step)return state;
